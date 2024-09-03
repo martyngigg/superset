@@ -24,7 +24,11 @@ ARG PY_VER=3.10-slim-bookworm
 ARG BUILDPLATFORM=${BUILDPLATFORM:-amd64}
 FROM --platform=${BUILDPLATFORM} node:20-bullseye-slim AS superset-node
 
+ARG ASSET_BASE_URL
+ARG BASE_PATH
 ARG NPM_BUILD_CMD="build"
+ENV ASSET_BASE_URL=${ASSET_BASE_URL:-}
+ENV BASE_PATH=${BASE_PATH:-}
 
 # Include translations in the final build. The default supports en only to
 # reduce complexity and weight for those only using en
@@ -41,10 +45,10 @@ ARG INCLUDE_FIREFOX="false"
 # Somehow we need python3 + build-essential on this side of the house to install node-gyp
 RUN apt-get update -qq \
     && apt-get install \
-        -yqq --no-install-recommends \
-        build-essential \
-        python3 \
-        zstd
+    -yqq --no-install-recommends \
+    build-essential \
+    python3 \
+    zstd
 
 ENV BUILD_CMD=${NPM_BUILD_CMD} \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
@@ -59,9 +63,9 @@ RUN mkdir -p /app/superset/static/assets
 RUN --mount=type=bind,target=./package.json,src=./superset-frontend/package.json \
     --mount=type=bind,target=./package-lock.json,src=./superset-frontend/package-lock.json \
     if [ "$DEV_MODE" = "false" ]; then \
-        npm ci; \
+    npm ci; \
     else \
-        echo "Skipping 'npm ci' in dev mode"; \
+    echo "Skipping 'npm ci' in dev mode"; \
     fi
 
 # Runs the webpack build process
@@ -70,17 +74,17 @@ COPY superset-frontend /app/superset-frontend
 RUN mkdir -p /app/superset/translations
 COPY superset/translations /app/superset/translations
 RUN if [ "$DEV_MODE" = "false" ]; then \
-        BUILD_TRANSLATIONS=$BUILD_TRANSLATIONS npm run ${BUILD_CMD}; \
+    BUILD_TRANSLATIONS=$BUILD_TRANSLATIONS npm run ${BUILD_CMD}; \
     else \
-        echo "Skipping 'npm run ${BUILD_CMD}' in dev mode"; \
+    echo "Skipping 'npm run ${BUILD_CMD}' in dev mode"; \
     fi
 
 
 # Compiles .json files from the .po files, then deletes the .po files
 RUN if [ "$BUILD_TRANSLATIONS" = "true" ]; then \
-        npm run build-translation; \
+    npm run build-translation; \
     else \
-        echo "Skipping translations as requested by build flag"; \
+    echo "Skipping translations as requested by build flag"; \
     fi
 RUN rm /app/superset/translations/*/LC_MESSAGES/*.po
 RUN rm /app/superset/translations/messages.pot
@@ -89,13 +93,18 @@ RUN rm /app/superset/translations/messages.pot
 # Final lean image...
 ######################################################################
 FROM python:${PY_VER} AS lean
+ARG ASSET_BASE_URL
+ARG BASE_PATH
 
 # Include translations in the final build. The default supports en only to
 # reduce complexity and weight for those only using en
 ARG BUILD_TRANSLATIONS="false"
 
 WORKDIR /app
-ENV LANG=C.UTF-8 \
+
+ENV ASSET_BASE_URL=${ASSET_BASE_URL:-} \
+    BASE_PATH=${BASE_PATH:-} \
+    LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
     SUPERSET_ENV=production \
     FLASK_APP="superset.app:create_app()" \
@@ -106,12 +115,12 @@ ENV LANG=C.UTF-8 \
 RUN mkdir -p ${PYTHONPATH} superset/static requirements superset-frontend apache_superset.egg-info requirements \
     && useradd --user-group -d ${SUPERSET_HOME} -m --no-log-init --shell /bin/bash superset \
     && apt-get update -qq && apt-get install -yqq --no-install-recommends \
-        curl \
-        libsasl2-dev \
-        libsasl2-modules-gssapi-mit \
-        libpq-dev \
-        libecpg-dev \
-        libldap2-dev \
+    curl \
+    libsasl2-dev \
+    libsasl2-modules-gssapi-mit \
+    libpq-dev \
+    libecpg-dev \
+    libldap2-dev \
     && touch superset/static/version_info.json \
     && chown -R superset:superset ./* \
     && rm -rf /var/lib/apt/lists/*
@@ -122,7 +131,7 @@ COPY --chown=superset:superset superset-frontend/package.json superset-frontend/
 COPY --chown=superset:superset requirements/base.txt requirements/
 RUN --mount=type=cache,target=/root/.cache/pip \
     apt-get update -qq && apt-get install -yqq --no-install-recommends \
-      build-essential \
+    build-essential \
     && pip install --no-cache-dir --upgrade setuptools pip \
     && pip install --no-cache-dir -r requirements/base.txt \
     && apt-get autoremove -yqq --purge build-essential \
@@ -142,12 +151,12 @@ COPY --chown=superset:superset --from=superset-node /app/superset/translations s
 # Compile translations for the backend - this generates .mo files, then deletes the .po files
 COPY ./scripts/translations/generate_mo_files.sh ./scripts/translations/
 RUN if [ "$BUILD_TRANSLATIONS" = "true" ]; then \
-        ./scripts/translations/generate_mo_files.sh \
-        && chown -R superset:superset superset/translations \
-        && rm superset/translations/messages.pot \
-        && rm superset/translations/*/LC_MESSAGES/*.po; \
+    ./scripts/translations/generate_mo_files.sh \
+    && chown -R superset:superset superset/translations \
+    && rm superset/translations/messages.pot \
+    && rm superset/translations/*/LC_MESSAGES/*.po; \
     else \
-        echo "Skipping translations as requested by build flag"; \
+    echo "Skipping translations as requested by build flag"; \
     fi
 
 COPY --chmod=755 ./docker/run-server.sh /usr/bin/
@@ -163,28 +172,30 @@ CMD ["/usr/bin/run-server.sh"]
 # Dev image...
 ######################################################################
 FROM lean AS dev
+ARG GECKODRIVER_VERSION=v0.33.0 \
+    FIREFOX_VERSION=117.0.1
 
 USER root
 RUN apt-get update -qq \
     && apt-get install -yqq --no-install-recommends \
-        libnss3 \
-        libdbus-glib-1-2 \
-        libgtk-3-0 \
-        libx11-xcb1 \
-        libasound2 \
-        libxtst6 \
-        git \
-        pkg-config \
-        && rm -rf /var/lib/apt/lists/*
+    libnss3 \
+    libdbus-glib-1-2 \
+    libgtk-3-0 \
+    libx11-xcb1 \
+    libasound2 \
+    libxtst6 \
+    git \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install --no-cache-dir playwright
 RUN playwright install-deps
 
 RUN if [ "$INCLUDE_CHROMIUM" = "true" ]; then \
-        playwright install chromium; \
+    playwright install chromium; \
     else \
-        echo "Skipping translations in dev mode"; \
+    echo "Skipping translations in dev mode"; \
     fi
 
 # Install GeckoDriver WebDriver
@@ -192,23 +203,23 @@ ARG GECKODRIVER_VERSION=v0.34.0 \
     FIREFOX_VERSION=125.0.3
 
 RUN if [ "$INCLUDE_FIREFOX" = "true" ]; then \
-        apt-get update -qq \
-        && apt-get install -yqq --no-install-recommends wget bzip2 \
-        && wget -q https://github.com/mozilla/geckodriver/releases/download/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz -O - | tar xfz - -C /usr/local/bin \
-        && wget -q https://download-installer.cdn.mozilla.net/pub/firefox/releases/${FIREFOX_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_VERSION}.tar.bz2 -O - | tar xfj - -C /opt \
-        && ln -s /opt/firefox/firefox /usr/local/bin/firefox \
-        && apt-get autoremove -yqq --purge wget bzip2 && rm -rf /var/[log,tmp]/* /tmp/* /var/lib/apt/lists/*; \
+    apt-get update -qq \
+    && apt-get install -yqq --no-install-recommends wget bzip2 \
+    && wget -q https://github.com/mozilla/geckodriver/releases/download/${GECKODRIVER_VERSION}/geckodriver-${GECKODRIVER_VERSION}-linux64.tar.gz -O - | tar xfz - -C /usr/local/bin \
+    && wget -q https://download-installer.cdn.mozilla.net/pub/firefox/releases/${FIREFOX_VERSION}/linux-x86_64/en-US/firefox-${FIREFOX_VERSION}.tar.bz2 -O - | tar xfj - -C /opt \
+    && ln -s /opt/firefox/firefox /usr/local/bin/firefox \
+    && apt-get autoremove -yqq --purge wget bzip2 && rm -rf /var/[log,tmp]/* /tmp/* /var/lib/apt/lists/*; \
     fi
 
 # Installing mysql client os-level dependencies in dev image only because GPL
 RUN apt-get install -yqq --no-install-recommends \
-        default-libmysqlclient-dev \
+    default-libmysqlclient-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chown=superset:superset requirements/development.txt requirements/
 RUN --mount=type=cache,target=/root/.cache/pip \
     apt-get update -qq && apt-get install -yqq --no-install-recommends \
-      build-essential \
+    build-essential \
     && pip install --no-cache-dir -r requirements/development.txt \
     && apt-get autoremove -yqq --purge build-essential \
     && rm -rf /var/lib/apt/lists/*

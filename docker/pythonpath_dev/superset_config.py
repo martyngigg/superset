@@ -28,6 +28,13 @@ from flask_caching.backends.filesystemcache import FileSystemCache
 
 logger = logging.getLogger()
 
+if os.getenv("BASE_PATH"):
+    ENABLE_PROXY_FIX = True
+    # Change x_port to 1 if the we are on the same port as the proxy server
+    PROXY_FIX_CONFIG = {"x_for": 1, "x_proto": 1, "x_host": 1, "x_port": 0, "x_prefix": 1}
+    STATIC_ASSETS_PREFIX = os.getenv("BASE_PATH", "")
+    APP_ICON = f"{STATIC_ASSETS_PREFIX}/static/assets/images/superset-logo-horiz.png"
+
 DATABASE_DIALECT = os.getenv("DATABASE_DIALECT")
 DATABASE_USER = os.getenv("DATABASE_USER")
 DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
