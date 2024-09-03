@@ -25,6 +25,7 @@ import {
 import { styled, css, SupersetTheme, t } from '@superset-ui/core';
 import Button from 'src/components/Button';
 import { Empty } from './Empty';
+import { assetUrl } from 'src/utils/assetUrl';
 
 export enum EmptyStateSize {
   Small,
@@ -123,7 +124,9 @@ const ActionButton = styled(Button)`
 `;
 
 const getImage = (image: string | ReactNode) =>
-  typeof image === 'string' ? `/static/assets/images/${image}` : image;
+  typeof image === 'string'
+    ? assetUrl(`/static/assets/images/${image}`)
+    : image;
 
 const getImageHeight = (size: EmptyStateSize) => {
   switch (size) {

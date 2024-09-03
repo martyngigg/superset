@@ -21,6 +21,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { addAlpha, css, styled, t } from '@superset-ui/core';
 import { EmptyStateBig } from 'src/components/EmptyState';
+import { ensureBasePath } from 'src/utils/pathUtils';
 import { componentShape } from '../util/propShapes';
 import DashboardComponent from '../containers/DashboardComponent';
 import { Droppable } from './dnd/DragDroppable';
@@ -218,7 +219,7 @@ class DashboardGrid extends PureComponent {
         }
         buttonAction={() => {
           window.open(
-            `/chart/add?dashboard_id=${dashboardId}`,
+            ensureBasePath(`/chart/add?dashboard_id=${dashboardId}`),
             '_blank',
             'noopener noreferrer',
           );
@@ -241,7 +242,7 @@ class DashboardGrid extends PureComponent {
         }
         buttonAction={() => {
           window.open(
-            `/chart/add?dashboard_id=${dashboardId}`,
+            ensureBasePath(`/chart/add?dashboard_id=${dashboardId}`),
             '_blank',
             'noopener noreferrer',
           );
