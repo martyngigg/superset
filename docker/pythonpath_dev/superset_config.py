@@ -28,11 +28,15 @@ from flask_caching.backends.filesystemcache import FileSystemCache
 
 logger = logging.getLogger()
 
-if os.getenv("BASE_PATH"):
+# If BASE_PATH is set we are assumed to be proxyed at this prefix location
+base_path = os.getenv("BASE_PATH", "")
+asset_base = os.getenv("ASSET_BASE_URL", base_path)
+if base_path:
     ENABLE_PROXY_FIX = True
     # Change x_port to 1 if the we are on the same port as the proxy server
     PROXY_FIX_CONFIG = {"x_for": 1, "x_proto": 1, "x_host": 1, "x_port": 0, "x_prefix": 1}
-    STATIC_ASSETS_PREFIX = os.getenv("BASE_PATH", "")
+if asset_base:
+    STATIC_ASSETS_PREFIX = asset_base
     APP_ICON = f"{STATIC_ASSETS_PREFIX}/static/assets/images/superset-logo-horiz.png"
 
 DATABASE_DIALECT = os.getenv("DATABASE_DIALECT")
