@@ -17,7 +17,7 @@
 import builtins
 from typing import Callable, Union
 
-from flask import g, redirect, request, url_for, Response
+from flask import g, redirect, request, Response, url_for
 from flask_appbuilder import expose
 from flask_appbuilder.actions import action
 from flask_appbuilder.baseviews import expose_api
@@ -102,7 +102,8 @@ class DashboardModelView(DashboardMixin, SupersetModelView, DeleteMixin):  # pyl
                 mimetype="application/text",
             )
         return self.render_template(
-            "superset/export_dashboards.html", dashboards_url=url_for("DashboardModelView.list")
+            "superset/export_dashboards.html",
+            dashboards_url=url_for("DashboardModelView.list"),
         )
 
 
@@ -122,7 +123,11 @@ class Dashboard(BaseSupersetView):
         )
         db.session.add(new_dashboard)
         db.session.commit()  # pylint: disable=consider-using-transaction
-        return redirect(url_for("Superset.dashboard", dashboard_id_or_slug=new_dashboard.id, edit=True))
+        return redirect(
+            url_for(
+                "Superset.dashboard", dashboard_id_or_slug=new_dashboard.id, edit=True
+            )
+        )
 
     @expose("/<dashboard_id_or_slug>/embedded")
     @event_logger.log_this_with_extra_payload
