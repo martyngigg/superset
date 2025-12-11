@@ -24,6 +24,7 @@ import { TableTab } from 'src/views/CRUD/types';
 import { styled, t } from '@superset-ui/core';
 import { navigateTo } from 'src/utils/navigationUtils';
 import { WelcomeTable } from './types';
+import { ensureAppRoot } from 'src/utils/pathUtils';
 
 const EmptyContainer = styled.div`
   min-height: 200px;
@@ -57,7 +58,7 @@ const REDIRECTS = {
   create: {
     [WelcomeTable.Charts]: '/chart/add',
     [WelcomeTable.Dashboards]: '/dashboard/new',
-    [WelcomeTable.SavedQueries]: '/sqllab?new=true',
+    [WelcomeTable.SavedQueries]: ensureAppRoot('/sqllab?new=true'),
   },
   viewAll: {
     [WelcomeTable.Charts]: '/chart/list',

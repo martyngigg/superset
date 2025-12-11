@@ -15,7 +15,7 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
- */
+*/
 import rison from 'rison';
 import { PureComponent, useCallback } from 'react';
 import PropTypes from 'prop-types';
@@ -68,6 +68,7 @@ import {
   formatQuery,
   resetDatabaseState,
 } from 'src/database/actions';
+import { ensureAppRoot } from 'src/utils/pathUtils';
 import Mousetrap from 'mousetrap';
 import { DatabaseSelector } from '../DatabaseSelector';
 import CollectionTable from './CollectionTable';
@@ -780,7 +781,7 @@ class DatasourceEditor extends PureComponent {
       autorun: true,
       isDataset: true,
     });
-    return `/sqllab/?${queryParams.toString()}`;
+    return ensureAppRoot(`/sqllab/?${queryParams.toString()}`);
   }
 
   openOnSqlLab() {

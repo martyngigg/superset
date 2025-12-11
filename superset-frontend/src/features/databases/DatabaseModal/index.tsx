@@ -105,6 +105,7 @@ import {
 import ModalHeader, { DOCUMENTATION_LINK } from './ModalHeader';
 import SSHTunnelForm from './SSHTunnelForm';
 import SSHTunnelSwitch from './SSHTunnelSwitch';
+import { ensureAppRoot } from 'src/utils/pathUtils';
 
 const extensionsRegistry = getExtensionsRegistry();
 
@@ -1715,7 +1716,7 @@ const DatabaseModal: FunctionComponent<DatabaseModalProps> = ({
         onClick={() => {
           setLoading(true);
           fetchAndSetDB();
-          redirectURL(`/sqllab?db=true`);
+          redirectURL(ensureAppRoot(`/sqllab?db=true`));
         }}
       >
         {t('Query data in SQL Lab')}
