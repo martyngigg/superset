@@ -18,6 +18,8 @@
  */
 import { useState, useEffect } from 'react';
 import { styled, css, useTheme } from '@superset-ui/core';
+import { ensureStaticPrefix } from 'src/utils/assetUrl';
+import { ensureAppRoot } from 'src/utils/pathUtils';
 import { getUrlParam } from 'src/utils/urlUtils';
 import { MainNav, MenuItem } from '@superset-ui/core/components/Menu';
 import { Tooltip, Grid, Row, Col, Image } from '@superset-ui/core/components';
@@ -287,10 +289,10 @@ export function Menu({
     if (theme.brandLogoUrl) {
       link = (
         <StyledBrandWrapper margin={theme.brandLogoMargin}>
-          <StyledBrandLink href={theme.brandLogoHref}>
+          <StyledBrandLink href={ensureAppRoot(theme.brandLogoHref)}>
             <StyledImage
               preview={false}
-              src={theme.brandLogoUrl}
+              src={ensureStaticPrefix(theme.brandLogoUrl)}
               alt={theme.brandLogoAlt || 'Apache Superset'}
               height={theme.brandLogoHeight}
             />

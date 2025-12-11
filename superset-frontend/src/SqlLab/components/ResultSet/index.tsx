@@ -87,7 +87,7 @@ import {
 } from 'src/logger/LogUtils';
 import { Icons } from '@superset-ui/core/components/Icons';
 import { findPermission } from 'src/utils/findPermission';
-import { ensureAppRoot } from 'src/utils/pathUtils';
+import { ensureAppRoot, stripAppRoot } from 'src/utils/pathUtils';
 import ExploreCtasResultsButton from '../ExploreCtasResultsButton';
 import ExploreResultsButton from '../ExploreResultsButton';
 import HighlightedSql from '../HighlightedSql';
@@ -294,7 +294,7 @@ const ResultSet = ({
       if (openInNewWindow) {
         window.open(url, '_blank', 'noreferrer');
       } else {
-        history.push(url);
+        history.push(stripAppRoot(url));
       }
     } else {
       addDangerToast(t('Unable to create chart without a query id.'));
