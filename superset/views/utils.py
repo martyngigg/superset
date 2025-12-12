@@ -24,6 +24,7 @@ from urllib import parse
 import msgpack
 import pyarrow as pa
 from flask import current_app as app, flash, g, has_request_context, redirect, request
+from flask.helpers import url_for
 from flask_appbuilder.security.sqla import models as ab_models
 from flask_appbuilder.security.sqla.models import User
 from flask_babel import _
@@ -74,10 +75,15 @@ def redirect_to_login(next_target: str | None = None) -> FlaskResponse:
 
     target = next_target
     if target is None and has_request_context():
-        if request.query_string:
-            target = request.full_path.rstrip("?")
+        if endpoint := request.endpoint:
+            target = url_for(endpoint)
         else:
-            target = request.path
+            if request.query_string:
+                target = request.full_path.rstrip("?")
+            else:
+                target = request.path
+            app_root = app.config.get("APPLICATION_ROOT", "")
+            target = app_root.rstrip("/") + target if target else None
 
     if target:
         query["next"] = [target]
