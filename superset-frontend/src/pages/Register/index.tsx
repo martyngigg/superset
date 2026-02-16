@@ -107,7 +107,11 @@ export default function Login() {
       conf_password: values.confirmPassword,
       'g-recaptcha-response': captchaResponse,
     };
-    SupersetClient.postForm('/register/form', payload, '').finally(() => {
+    SupersetClient.postForm({
+      endpoint: '/register/form',
+      payload,
+      target: '',
+    }).finally(() => {
       setLoading(false);
     });
   };

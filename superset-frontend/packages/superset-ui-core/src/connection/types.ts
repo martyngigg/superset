@@ -117,6 +117,23 @@ export interface RequestWithUrl extends RequestBase {
 // this make sure at least one of `url` or `endpoint` is set
 export type RequestConfig = RequestWithEndpoint | RequestWithUrl;
 
+export interface PostFormBase {
+  payload: Record<string, any>;
+  target?: string;
+}
+
+export interface PostFormWithEndpoint extends PostFormBase {
+  endpoint: Endpoint;
+  url?: Url;
+}
+
+export interface PostFormWithUrl extends PostFormBase {
+  url: Url;
+  endpoint?: Endpoint;
+}
+
+export type PostFormConfig = PostFormWithEndpoint | PostFormWithUrl;
+
 export interface JsonResponse {
   response: Response;
   json: JsonObject;
