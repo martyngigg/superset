@@ -3,7 +3,7 @@ name: "Frontend Build CI (unit tests, linting & sanity checks)"
 on:
   push:
     branches:
-      - "master"
+      - "v6"
       - "[0-9].[0-9]*"
   pull_request:
     types: [synchronize, opened, reopened, ready_for_review]

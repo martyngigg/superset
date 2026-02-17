@@ -3,24 +3,24 @@ name: E2E
 on:
   push:
     branches:
-      - "master"
+      - "v6"
       - "[0-9].[0-9]*"
   pull_request:
     types: [synchronize, opened, reopened, ready_for_review]
   workflow_dispatch:
     inputs:
       use_dashboard:
-        description: 'Use Cypress Dashboard (true/false) [paid service - trigger manually when needed]. You MUST provide a branch and/or PR number below for this to work.'
+        description: "Use Cypress Dashboard (true/false) [paid service - trigger manually when needed]. You MUST provide a branch and/or PR number below for this to work."
         required: false
-        default: 'false'
+        default: "false"
       ref:
-        description: 'The branch or tag to checkout'
+        description: "The branch or tag to checkout"
         required: false
-        default: ''
+        default: ""
       pr_id:
-        description: 'The pull request ID to checkout'
+        description: "The pull request ID to checkout"
         required: false
-        default: ''
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
@@ -111,7 +111,7 @@ jobs:
         if: steps.check.outputs.python || steps.check.outputs.frontend
         uses: actions/setup-node@v4
         with:
-          node-version-file: './superset-frontend/.nvmrc'
+          node-version-file: "./superset-frontend/.nvmrc"
       - name: Install npm dependencies
         if: steps.check.outputs.python || steps.check.outputs.frontend
         uses: ./.github/actions/cached-dependencies
