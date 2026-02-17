@@ -21,7 +21,6 @@ import userEvent from '@testing-library/user-event';
 import { SupersetClient } from '@superset-ui/core';
 import getBootstrapData, { applicationRoot } from 'src/utils/getBootstrapData';
 import Login from './index';
-import { AuthType } from 'src/features/databases/DatabaseModal';
 
 const defaultBootstrapData = (authUserRegistration: boolean = false) => ({
   common: {
