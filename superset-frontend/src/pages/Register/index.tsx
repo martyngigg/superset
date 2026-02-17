@@ -88,7 +88,11 @@ export default function Login() {
           title="Registration successful"
           subTitle="Your account is activated. You can log in with your credentials."
           extra={[
-            <Button type="default" href={ensureAppRoot("/login/")} data-test="login-button">
+            <Button
+              type="default"
+              href={ensureAppRoot('/login/')}
+              data-test="login-button"
+            >
               {t('Login')}
             </Button>,
           ]}

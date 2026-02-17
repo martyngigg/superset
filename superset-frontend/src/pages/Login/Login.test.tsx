@@ -29,7 +29,7 @@ const defaultBootstrapData = (authUserRegistration: boolean = false) => ({
       AUTH_PROVIDERS: [],
       AUTH_USER_REGISTRATION: authUserRegistration,
     },
-    feature_flags: {}
+    feature_flags: {},
   },
 });
 
@@ -39,12 +39,10 @@ jest.mock('src/utils/getBootstrapData', () => ({
   applicationRoot: jest.fn(() => ''),
 }));
 
-const mockGetBootstrapData = (getBootstrapData as jest.Mock);
-const mockApplicationRoot = (applicationRoot as jest.Mock);
+const mockGetBootstrapData = getBootstrapData as jest.Mock;
+const mockApplicationRoot = applicationRoot as jest.Mock;
 
-const renderLogin = () =>
-  render(<Login />, { useRedux: true });
-
+const renderLogin = () => render(<Login />, { useRedux: true });
 
 test('should render login form elements', () => {
   renderLogin();
@@ -78,68 +76,78 @@ test('should render registration button with correct app root URL when authRegis
   expect(registerButton).toHaveAttribute('href', '/superset/register/');
 });
 
-test.each([['', '/superset']])('should render OAuth providers with app root %s', (app_root: string) => {
-  mockGetBootstrapData.mockReturnValue({
-    common: {
-      conf: {
-        AUTH_TYPE: 4, // AuthType.AuthOauth
-        AUTH_PROVIDERS: [
-          { name: 'google', icon: 'google' },
-          { name: 'github', icon: 'github' },
-        ],
-        AUTH_USER_REGISTRATION: false,
+test.each([['', '/superset']])(
+  'should render OAuth providers with app root %s',
+  (app_root: string) => {
+    mockGetBootstrapData.mockReturnValue({
+      common: {
+        conf: {
+          AUTH_TYPE: 4, // AuthType.AuthOauth
+          AUTH_PROVIDERS: [
+            { name: 'google', icon: 'google' },
+            { name: 'github', icon: 'github' },
+          ],
+          AUTH_USER_REGISTRATION: false,
+        },
       },
-    },
-  });
+    });
 
-  mockApplicationRoot.mockReturnValue(app_root);
+    mockApplicationRoot.mockReturnValue(app_root);
 
-  renderLogin();
+    renderLogin();
 
-  const googleButton = screen.getByRole('link', {
-    name: /Sign in with Google/i,
-  });
-  const githubButton = screen.getByRole('link', {
-    name: /Sign in with Github/i,
-  });
+    const googleButton = screen.getByRole('link', {
+      name: /Sign in with Google/i,
+    });
+    const githubButton = screen.getByRole('link', {
+      name: /Sign in with Github/i,
+    });
 
-  expect(googleButton).toHaveAttribute('href', `${app_root}/login/google`);
-  expect(githubButton).toHaveAttribute('href', `${app_root}/login/github`);
-});
+    expect(googleButton).toHaveAttribute('href', `${app_root}/login/google`);
+    expect(githubButton).toHaveAttribute('href', `${app_root}/login/github`);
+  },
+);
 
-test.each([[1, 2]])('should call SupersetClient.postForm with correct endpoint for AuthDB/AuthLDAP', async (authType: number) => {
-  mockGetBootstrapData.mockReturnValue({
-    common: {
-      conf: {
-        AUTH_TYPE: authType,
-        AUTH_PROVIDERS: [],
-        AUTH_USER_REGISTRATION: false,
+test.each([[1, 2]])(
+  'should call SupersetClient.postForm with correct endpoint for AuthDB/AuthLDAP',
+  async (authType: number) => {
+    mockGetBootstrapData.mockReturnValue({
+      common: {
+        conf: {
+          AUTH_TYPE: authType,
+          AUTH_PROVIDERS: [],
+          AUTH_USER_REGISTRATION: false,
+        },
       },
-    },
-  });
-  mockApplicationRoot.mockReturnValue('/superset');
+    });
+    mockApplicationRoot.mockReturnValue('/superset');
 
-  const postFormSpy = jest
-    .spyOn(SupersetClient, 'postForm')
-    .mockResolvedValue();
+    const postFormSpy = jest
+      .spyOn(SupersetClient, 'postForm')
+      .mockResolvedValue();
 
-  renderLogin();
+    renderLogin();
 
-  // Fill in the form
-  const usernameInput = screen.getByTestId('username-input');
-  const passwordInput = screen.getByTestId('password-input');
-  const loginButton = screen.getByTestId('login-button');
+    // Fill in the form
+    const usernameInput = screen.getByTestId('username-input');
+    const passwordInput = screen.getByTestId('password-input');
+    const loginButton = screen.getByTestId('login-button');
 
-  await userEvent.type(usernameInput, 'testuser');
-  await userEvent.type(passwordInput, 'testpass');
-  await userEvent.click(loginButton);
+    await userEvent.type(usernameInput, 'testuser');
+    await userEvent.type(passwordInput, 'testpass');
+    await userEvent.click(loginButton);
 
-  await waitFor(() => {
-    expect(postFormSpy).toHaveBeenCalledWith(
-      // Should be bare endpoint, not /superset/login/
-      { endpoint: '/login/', payload: { username: 'testuser', password: 'testpass' }, target: '' },
-    );
-  });
+    await waitFor(() => {
+      expect(postFormSpy).toHaveBeenCalledWith(
+        // Should be bare endpoint, not /superset/login/
+        {
+          endpoint: '/login/',
+          payload: { username: 'testuser', password: 'testpass' },
+          target: '',
+        },
+      );
+    });
 
-  postFormSpy.mockRestore();
-});
+    postFormSpy.mockRestore();
+  },
+);

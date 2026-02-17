@@ -30,7 +30,7 @@ jest.mock('src/utils/getBootstrapData', () => ({
       },
     },
   }),
-  applicationRoot: jest.fn(() => '')
+  applicationRoot: jest.fn(() => ''),
 }));
 
 jest.mock('react-google-recaptcha', () => ({

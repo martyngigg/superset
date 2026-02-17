@@ -277,8 +277,8 @@ export const exportChart = async ({
   }
 
   SupersetClient.postForm({
-    endpoint: endpoint,
-    url: url,
+    endpoint,
+    url,
     payload: { form_data: safeStringify(payload) },
   });
 };
