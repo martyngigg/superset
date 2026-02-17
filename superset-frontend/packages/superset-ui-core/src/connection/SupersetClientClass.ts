@@ -259,7 +259,7 @@ export default class SupersetClientClass {
 
   getUrl({
     host: inputHost,
-    endpoint,
+    endpoint = '',
     url,
   }: {
     endpoint?: string;
