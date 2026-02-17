@@ -17,8 +17,9 @@
  * under the License.
  */
 import { render, screen } from 'spec/helpers/testing-library';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route } from 'react-router-dom';
 import Register from './index';
+import { applicationRoot } from 'src/utils/getBootstrapData';
 
 jest.mock('src/utils/getBootstrapData', () => ({
   __esModule: true,
@@ -29,6 +30,7 @@ jest.mock('src/utils/getBootstrapData', () => ({
       },
     },
   }),
+  applicationRoot: jest.fn(() => '')
 }));
 
 jest.mock('react-google-recaptcha', () => ({
@@ -40,6 +42,13 @@ const renderRegister = () =>
   render(
     <MemoryRouter>
       <Register />
+    </MemoryRouter>,
+  );
+
+const renderActivated = () =>
+  render(
+    <MemoryRouter initialEntries={['/abcdefgh']}>
+      <Route path="/:activationHash" component={Register} />
     </MemoryRouter>,
   );
 
@@ -79,4 +88,19 @@ test('should render input placeholders', () => {
   expect(screen.getByPlaceholderText('Email')).toBeInTheDocument();
   expect(screen.getByPlaceholderText('Password')).toBeInTheDocument();
   expect(screen.getByPlaceholderText('Confirm password')).toBeInTheDocument();
+});
+
+test('should render login button with login URL when no app root', () => {
+  renderActivated();
+
+  const loginButton = screen.getByTestId('login-button');
+  expect(loginButton).toHaveAttribute('href', '/login/');
+});
+
+test('should render login button with login URL app root set', () => {
+  (applicationRoot as jest.Mock).mockReturnValue('/superset');
+  renderActivated();
+
+  const loginButton = screen.getByTestId('login-button');
+  expect(loginButton).toHaveAttribute('href', '/superset/login/');
 });
