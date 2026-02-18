@@ -18,8 +18,8 @@
  */
 import { render, screen } from 'spec/helpers/testing-library';
 import { MemoryRouter, Route } from 'react-router-dom';
-import Register from './index';
 import { applicationRoot } from 'src/utils/getBootstrapData';
+import Register from './index';
 
 jest.mock('src/utils/getBootstrapData', () => ({
   __esModule: true,

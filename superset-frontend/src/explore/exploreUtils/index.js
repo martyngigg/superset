@@ -291,7 +291,7 @@ export const exploreChart = (formData, requestParams) => {
     requestParams,
   });
   SupersetClient.postForm({
-    url: url,
+    url,
     payload: { form_data: safeStringify(formData) },
   });
 };
