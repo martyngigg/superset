@@ -252,6 +252,7 @@ export const exportChart = async ({
   force = false,
   ownState = {},
 }) => {
+  let endpoint;
   let url;
   let payload;
   const [useLegacyApi, parseMethod] = getQuerySettings(formData);
@@ -264,7 +265,7 @@ export const exportChart = async ({
     });
     payload = formData;
   } else {
-    url = ensureAppRoot('/api/v1/chart/data');
+    endpoint = '/api/v1/chart/data';
     payload = await buildV1ChartDataPayload({
       formData,
       force,
@@ -275,7 +276,11 @@ export const exportChart = async ({
     });
   }
 
-  SupersetClient.postForm(url, { form_data: safeStringify(payload) });
+  SupersetClient.postForm({
+    endpoint,
+    url,
+    payload: { form_data: safeStringify(payload) },
+  });
 };
 
 export const exploreChart = (formData, requestParams) => {
@@ -285,7 +290,10 @@ export const exploreChart = (formData, requestParams) => {
     allowDomainSharding: false,
     requestParams,
   });
-  SupersetClient.postForm(url, { form_data: safeStringify(formData) });
+  SupersetClient.postForm({
+    url,
+    payload: { form_data: safeStringify(formData) },
+  });
 };
 
 export const useDebouncedEffect = (effect, delay, deps) => {
