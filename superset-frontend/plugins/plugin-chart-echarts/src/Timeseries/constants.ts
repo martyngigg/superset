@@ -26,6 +26,7 @@ import {
   OrientationType,
   EchartsTimeseriesSeriesType,
   EchartsTimeseriesFormData,
+  RegressionType,
 } from './types';
 // import {
 //   DEFAULT_LEGEND_FORM_DATA,
@@ -87,6 +88,9 @@ export const DEFAULT_FORM_DATA: EchartsTimeseriesFormData = {
   orientation: OrientationType.Vertical,
   sort_series_type: 'sum',
   sort_series_ascending: false,
+  showRegression: false,
+  regressionType: RegressionType.Linear,
+  regressionOrder: 2,
 };
 
 export const TIME_SERIES_DESCRIPTION_TEXT: string = t(

@@ -32,7 +32,15 @@ import { merge } from 'lodash';
 import { useSelector } from 'react-redux';
 
 import { styled, useTheme } from '@superset-ui/core';
-import { use, init, EChartsType, registerLocale } from 'echarts/core';
+import {
+  use,
+  init,
+  EChartsType,
+  registerLocale,
+  registerTransform,
+} from 'echarts/core';
+// @ts-ignore - echarts-stat has no bundled type declarations
+import { transform as ecStatTransform } from 'echarts-stat';
 import {
   SankeyChart,
   PieChart,
@@ -111,6 +119,11 @@ use([
   VisualMapComponent,
   LabelLayout,
 ]);
+
+// Register the ecStat regression transform so charts can declare a
+// `{ transform: { type: 'ecStat:regression' } }` dataset (e.g. scatter
+// regression lines).
+registerTransform(ecStatTransform.regression);
 
 const loadLocale = async (locale: string) => {
   let lang;

@@ -34,7 +34,9 @@ import EchartsTimeseries from './EchartsTimeseries';
 import {
   EchartsTimeseriesSeriesType,
   OrientationType,
+  RegressionType,
   type EchartsTimeseriesFormData,
+  type RegressionConfig,
   type TimeseriesChartTransformedProps,
 } from './types';
 
@@ -269,6 +271,72 @@ test('observes extra control height changes when ResizeObserver is available', a
   unmount();
 
   expect(disconnectSpy).toHaveBeenCalled();
+});
+
+test('recalculates the regression line on data zoom using only visible points', async () => {
+  const source = [
+    [1, 1],
+    [2, 2],
+    [3, 3],
+    [4, 4],
+    [5, 5],
+    [6, 6],
+    [7, 7],
+    [8, 8],
+    [9, 9],
+    [10, 10],
+  ];
+  const regressionConfig: RegressionConfig = {
+    seriesName: 'Regression line',
+    method: RegressionType.Linear,
+    order: 2,
+    source,
+    isHorizontal: false,
+  };
+
+  // Visible x-axis extent after zoom: [3, 7]
+  const setOption = jest.fn();
+  const getExtent = jest.fn(() => [3, 7]);
+  const echartInstance = {
+    setOption,
+    getModel: () => ({
+      getComponent: () => ({
+        axis: { scale: { getExtent } },
+      }),
+    }),
+  };
+
+  const props: TimeseriesChartTransformedProps = {
+    ...defaultProps,
+    regressionConfig,
+    refs: {},
+  };
+
+  render(<EchartsTimeseries {...props} />);
+
+  // wire the mocked echart instance into the ref that the component populated
+  (props.refs.echartRef as { current: EchartsHandler | null }).current = {
+    getEchartInstance: () => echartInstance as never,
+  };
+
+  const [echartProps] = mockEchart.mock.calls.at(-1) as [EchartsProps];
+  const datazoom = echartProps.eventHandlers?.datazoom;
+  expect(datazoom).toBeDefined();
+
+  datazoom!({});
+
+  expect(getExtent).toHaveBeenCalled();
+  expect(setOption).toHaveBeenCalledTimes(1);
+  const optionArg = setOption.mock.calls[0][0];
+  const regressionSeries = optionArg.series[0];
+  expect(regressionSeries.name).toBe('Regression line');
+  // only x in [3, 7] should participate -> 5 fitted points spanning x=3..7
+  const xs = regressionSeries.data.map((point: number[]) => point[0]);
+  expect(xs).toEqual([3, 4, 5, 6, 7]);
+  // linear fit of y=x -> fitted y approximately equals x
+  regressionSeries.data.forEach(([x, y]: number[]) => {
+    expect(y).toBeCloseTo(x, 6);
+  });
 });
 
 test('falls back to window resize listener when ResizeObserver is unavailable', async () => {

@@ -31,6 +31,7 @@ import {
   DEFAULT_FORM_DATA,
   TIME_SERIES_DESCRIPTION_TEXT,
 } from '../../constants';
+import { RegressionType } from '../../types';
 import {
   legendSection,
   minorTicks,
@@ -51,6 +52,9 @@ const {
   rowLimit,
   truncateYAxis,
   yAxisBounds,
+  showRegression,
+  regressionType,
+  regressionOrder,
 } = DEFAULT_FORM_DATA;
 const config: ControlPanelConfig = {
   controlPanelSections: [
@@ -102,6 +106,67 @@ const config: ControlPanelConfig = {
         ['zoomable'],
         [minorTicks],
         ...legendSection,
+        [
+          <ControlSubSectionHeader>
+            {t('Regression Line')}
+          </ControlSubSectionHeader>,
+        ],
+        [
+          {
+            name: 'showRegression',
+            config: {
+              type: 'CheckboxControl',
+              label: t('Show regression line'),
+              renderTrigger: true,
+              default: showRegression,
+              description: t(
+                'Draw a best-fit regression line over the scatter points. ' +
+                  'Only numeric x-axis values are used for the fit.',
+              ),
+            },
+          },
+        ],
+        [
+          {
+            name: 'regressionType',
+            config: {
+              type: 'SelectControl',
+              freeForm: false,
+              label: t('Regression type'),
+              renderTrigger: true,
+              default: regressionType,
+              choices: [
+                [RegressionType.Linear, t('Linear')],
+                [RegressionType.Exponential, t('Exponential')],
+                [RegressionType.Logarithmic, t('Logarithmic')],
+                [RegressionType.Polynomial, t('Polynomial')],
+              ],
+              description: t('The type of regression curve to fit.'),
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                Boolean(controls?.showRegression?.value),
+            },
+          },
+        ],
+        [
+          {
+            name: 'regressionOrder',
+            config: {
+              type: 'SliderControl',
+              label: t('Polynomial order'),
+              renderTrigger: true,
+              min: 2,
+              max: 10,
+              step: 1,
+              default: regressionOrder,
+              description: t(
+                'The order (degree) of the polynomial regression curve.',
+              ),
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                Boolean(controls?.showRegression?.value) &&
+                controls?.regressionType?.value === RegressionType.Polynomial,
+            },
+          },
+        ],
         [<ControlSubSectionHeader>{t('X Axis')}</ControlSubSectionHeader>],
 
         [

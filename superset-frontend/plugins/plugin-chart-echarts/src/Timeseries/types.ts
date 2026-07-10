@@ -51,6 +51,13 @@ export enum EchartsTimeseriesSeriesType {
   End = 'end',
 }
 
+export enum RegressionType {
+  Linear = 'linear',
+  Exponential = 'exponential',
+  Logarithmic = 'logarithmic',
+  Polynomial = 'polynomial',
+}
+
 export type EchartsTimeseriesFormData = QueryFormData & {
   annotationLayers: AnnotationLayer[];
   area: boolean;
@@ -96,12 +103,26 @@ export type EchartsTimeseriesFormData = QueryFormData & {
   showExtraControls: boolean;
   percentageThreshold: number;
   orientation?: OrientationType;
+  showRegression?: boolean;
+  regressionType?: RegressionType;
+  regressionOrder?: number;
 } & LegendFormData &
   TitleFormData;
 
 export interface EchartsTimeseriesChartProps
   extends BaseChartProps<EchartsTimeseriesFormData> {
   formData: EchartsTimeseriesFormData;
+}
+
+export interface RegressionConfig {
+  // name of the regression line series (used to target it on updates)
+  seriesName: string;
+  method: RegressionType;
+  order: number;
+  // raw [x, y] observation points used to fit the regression
+  source: number[][];
+  // whether the chart is horizontally oriented (x/y swapped)
+  isHorizontal: boolean;
 }
 
 export type TimeseriesChartTransformedProps =
@@ -115,4 +136,5 @@ export type TimeseriesChartTransformedProps =
         type: AxisType;
       };
       onFocusedSeries: (series: string | null) => void;
+      regressionConfig?: RegressionConfig;
     };

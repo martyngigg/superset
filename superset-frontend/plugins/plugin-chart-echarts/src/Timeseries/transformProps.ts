@@ -52,10 +52,14 @@ import type {
   CallbackDataParams,
 } from 'echarts/types/src/util/types';
 import type { SeriesOption } from 'echarts';
+import type { DatasetOption } from 'echarts/types/dist/shared';
 import {
   EchartsTimeseriesChartProps,
   EchartsTimeseriesFormData,
+  EchartsTimeseriesSeriesType,
   OrientationType,
+  RegressionConfig,
+  RegressionType,
   TimeseriesChartTransformedProps,
 } from './types';
 import { DEFAULT_FORM_DATA } from './constants';
@@ -164,6 +168,9 @@ export default function transformProps(
     percentageThreshold,
     richTooltip,
     seriesType,
+    showRegression,
+    regressionType,
+    regressionOrder,
     showLegend,
     showValue,
     sliceId,
@@ -378,6 +385,79 @@ export default function transformProps(
 
     series.unshift(baselineSeries);
   }
+
+  // Regression line - only for scatter charts with a numeric x-axis.
+  // Uses the ecStat regression dataset transform (registered in Echart.tsx) for
+  // the initial render. The regression is recalculated on the client (also via
+  // echarts-stat) whenever the visible range changes (e.g. Data Zoom) - see the
+  // `datazoom` handler in EchartsTimeseries.tsx which consumes `regressionConfig`.
+  let regressionSeriesName: string | undefined;
+  let regressionConfig: RegressionConfig | undefined;
+  const datasets: DatasetOption[] = [];
+  if (
+    showRegression &&
+    seriesType === EchartsTimeseriesSeriesType.Scatter &&
+    xAxisType !== AxisType.Category
+  ) {
+    // Combine all observation points across series into a single [x, y] dataset,
+    // keeping only numeric pairs (regression requires a continuous x axis).
+    const regressionSource = series
+      .filter(
+        entry =>
+          extractForecastSeriesContext(String(entry.name ?? '')).type ===
+          ForecastSeriesEnum.Observation,
+      )
+      .flatMap(
+        entry =>
+          (entry.data ?? []) as [number | string | null, number | null][],
+      )
+      .map(([x, y]) => [Number(x), Number(y)])
+      .filter(
+        ([x, y]) => Number.isFinite(x) && Number.isFinite(y),
+      ) as number[][];
+
+    if (regressionSource.length > 1) {
+      const method =
+        (regressionType as RegressionType) ?? RegressionType.Linear;
+      const order = regressionOrder ?? 2;
+      regressionSeriesName = t('Regression line');
+      // Dataset 0: raw source points. Dataset 1: ecStat regression transform.
+      datasets.push(
+        { source: regressionSource },
+        {
+          transform: {
+            type: 'ecStat:regression',
+            config: {
+              method,
+              ...(method === RegressionType.Polynomial ? { order } : {}),
+            },
+          },
+        },
+      );
+      series.push({
+        id: regressionSeriesName,
+        name: regressionSeriesName,
+        type: 'line',
+        datasetIndex: 1,
+        // ecStat outputs [x, y]; swap for horizontal orientation.
+        encode: isHorizontal ? { x: 1, y: 0 } : { x: 0, y: 1 },
+        smooth: method !== RegressionType.Linear,
+        showSymbol: false,
+        silent: true,
+        z: 100,
+        itemStyle: { color: colorScale(regressionSeriesName, sliceId) },
+        lineStyle: { width: 2, type: 'dashed' },
+      });
+      regressionConfig = {
+        seriesName: regressionSeriesName,
+        method,
+        order,
+        source: regressionSource,
+        isHorizontal,
+      };
+    }
+  }
+
   const selectedValues = (filterState.selectedValues || []).reduce(
     (acc: Record<string, number>, selectedValue: string) => {
       const index = series.findIndex(({ name }) => name === selectedValue);
@@ -515,7 +595,8 @@ export default function transformProps(
         ForecastSeriesEnum.Observation,
     )
     .map(entry => entry.name || '')
-    .concat(extractAnnotationLabels(annotationLayers));
+    .concat(extractAnnotationLabels(annotationLayers))
+    .concat(regressionSeriesName ? [regressionSeriesName] : []);
 
   let xAxis: any = {
     type: xAxisType,
@@ -573,6 +654,7 @@ export default function transformProps(
 
   const echartOptions: EChartsCoreOption = {
     useUTC: true,
+    ...(datasets.length ? { dataset: datasets } : {}),
     grid: {
       ...defaultGrid,
       ...padding,
@@ -759,5 +841,6 @@ export default function transformProps(
     refs,
     coltypeMapping: dataTypes,
     onLegendScroll,
+    regressionConfig,
   };
 }
